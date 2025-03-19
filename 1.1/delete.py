@@ -8,7 +8,7 @@ response = dynamoDB.scan(TableName=table_name)
 
 # Loop through the items and delete each one
 for item in response['Items']:
-    email = item['email']['S']  # Assuming 'email' is the partition key
+    email = item['email']['S']
     dynamoDB.delete_item(
         TableName=table_name,
         Key={'email': {'S': email}}
