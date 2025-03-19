@@ -1,0 +1,3 @@
+#Ignore all DS_Sotre file
+.DS_Sotre
+*/**/.DS_Store
