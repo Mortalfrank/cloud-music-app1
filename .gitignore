@@ -4,4 +4,4 @@
 target/
 .idea/
 *.iml
-resources/application.properties
+/src/main/resources/application.properties
