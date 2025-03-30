@@ -3,7 +3,9 @@ package com.musicapp.runner;
 import com.musicapp.service.ArtistImageService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
+@Profile("task2") // This is executed only when the "task2" profile is enabled
 @Component
 public class Task2Runner implements CommandLineRunner {
     private final ArtistImageService imageService;
