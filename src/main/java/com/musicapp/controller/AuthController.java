@@ -31,7 +31,7 @@ public class AuthController {
     ) {
         User user = authService.validateUser(email, password);
         if (user != null) {
-            // The login is successful. The user name is saved to session
+            // The login is successful. The username is saved to session
             session.setAttribute("username", user.getUserName());
             return "redirect:/";
         } else {

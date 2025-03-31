@@ -18,4 +18,8 @@ public class UserRepository {
     public User findByEmail(String email) {
         return dynamoDBMapper.load(User.class, email);
     }
+
+    public void save(User user) {
+        dynamoDBMapper.save(user);
+    }
 }
