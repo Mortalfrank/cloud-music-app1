@@ -3,7 +3,7 @@ region_name = "us-east-1"
 dynamoDB = boto3.client('dynamodb', 
                        region_name='us-east-1',
                        endpoint_url='http://localhost:8001') 
-table_name = "students"
+table_name = "login"
 
 try:
     dynamoDB.delete_table(TableName=table_name)
@@ -16,7 +16,7 @@ except dynamoDB.exceptions.ResourceNotFoundException:
 
 
 table = dynamoDB.create_table(
-    TableName = 'students',
+    TableName = 'login',
     KeySchema=[
         {
             'AttributeName': 'email',

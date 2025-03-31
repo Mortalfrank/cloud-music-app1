@@ -3,13 +3,16 @@
 <head>
     <title>Music App - Login</title>
     <meta charset="UTF-8">
+    <style>
+        .error { color: red; }
+    </style>
 </head>
 <body>
 <h1>Login Page</h1>
 <form th:action="@{/login}" method="post">
     <div>
-        <label>Username:</label>
-        <input type="text" name="username" required>
+        <label>Email:</label>
+        <input type="email" name="email" required>
     </div>
     <div>
         <label>Password:</label>
@@ -17,6 +20,8 @@
     </div>
     <button type="submit">Login</button>
 </form>
+<a th:href="@{/register}">Register</a>
 <a th:href="@{/}">Back to Home</a>
+<p th:if="${error}" class="error" th:text="${error}"></p>
 </body>
 </html>

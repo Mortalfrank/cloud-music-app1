@@ -3,7 +3,7 @@ import boto3
 dynamoDB = boto3.client('dynamodb', 
                        region_name='us-east-1',
                        endpoint_url='http://localhost:8001') 
-table_name = 'students'
+table_name = 'login'
 
 # Scan the table to get all items
 response = dynamoDB.scan(TableName=table_name)

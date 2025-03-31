@@ -1,10 +1,10 @@
 import boto3
 
-dynamoDB = boto3.client('dynamodb', 
+dynamoDB = boto3.resource('dynamodb', 
                        region_name='us-east-1',
                        endpoint_url='http://localhost:8001') 
 
-table = dynamoDB.Table('students')
+table = dynamoDB.Table('login')
 passw = '0123456789'
 for i in range(0, 10):
     table.put_item(

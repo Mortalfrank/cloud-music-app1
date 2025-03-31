@@ -3,10 +3,38 @@
 <head>
     <title>Music App - Home</title>
     <meta charset="UTF-8">
+    <style>
+        .welcome-message {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .login-link {
+            color: #3498db;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-<h1 th:text="${message}">Default Welcome Message</h1>
+<h1 class="welcome-message" th:text="${message}">Default Welcome Message</h1>
+
 <p>This is the home page.</p>
-<a th:href="@{/login}">Go to Login</a> <!-- Thymeleaf 链接语法 -->
+
+<!-- Display different buttons according to login status -->
+<div th:if="${session.username != null}">
+    <a href="/logout" class="logout-btn">Logout</a>
+</div>
+<div th:unless="${session.username != null}">
+    <a th:href="@{/login}" class="login-link">Go to Login</a>
+</div>
 </body>
 </html>
