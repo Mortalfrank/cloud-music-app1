@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Music App - Home</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+<h1 th:text="${message}">Default Welcome Message</h1>
+<p>This is the home page.</p>
+<a th:href="@{/login}">Go to Login</a> <!-- Thymeleaf 链接语法 -->
+</body>
+</html>

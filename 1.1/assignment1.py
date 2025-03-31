@@ -1,6 +1,8 @@
 import boto3
 region_name = "us-east-1"
-dynamoDB = boto3.client('dynamodb', region_name=region_name)
+dynamoDB = boto3.client('dynamodb', 
+                       region_name='us-east-1',
+                       endpoint_url='http://localhost:8001') 
 table_name = "students"
 
 try:

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Profile;
 
 @Profile("task2") // This is executed only when the "task2" profile is enabled
+//mvn spring-boot:run -Dspring-boot.run.profiles=task2
 @Component
 public class Task2Runner implements CommandLineRunner {
     private final ArtistImageService imageService;
