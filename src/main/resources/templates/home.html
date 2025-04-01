@@ -3,38 +3,78 @@
 <head>
     <title>Music App - Home</title>
     <meta charset="UTF-8">
-    <style>
-        .welcome-message {
-            font-size: 24px;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        .logout-btn {
-            background-color: #e74c3c;
-            color: white;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-        .login-link {
-            color: #3498db;
-            text-decoration: none;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<h1 class="welcome-message" th:text="${message}">Default Welcome Message</h1>
+<body class="bg-gray-100">
 
-<p>This is the home page.</p>
+<!-- Navigation Bar -->
+<div class="flex justify-between items-center p-4 bg-indigo-600 text-white">
+    <div class="text-xl font-bold">
+        <span>Music App</span>
+    </div>
+    <!-- User area: Show user name and logout button -->
+    <div th:if="${session.username != null}" class="flex items-center space-x-4">
+        <p class="text-lg">Welcome, <span th:text="${session.username}"></span>!</p>
+        <a href="/logout" class="bg-red-500 text-white py-2 px-6 rounded-md hover:bg-red-600">Logout</a>
+    </div>
+    <!-- Login link if not logged in -->
+    <div th:unless="${session.username != null}" class="text-lg">
+        <a href="/login" class="text-white hover:text-gray-200">Go to Login</a>
+    </div>
+</div>
 
-<!-- Display different buttons according to login status -->
-<div th:if="${session.username != null}">
-    <a href="/logout" class="logout-btn">Logout</a>
+<div class="container mx-auto py-8 px-4">
+    <!-- Subscription area -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-semibold text-gray-800">Your Subscriptions</h2>
+        <div th:if="${subscriptions != null}" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamically show subscribed music -->
+            <div th:each="song : ${subscriptions}" class="bg-white p-4 rounded-lg shadow-lg">
+                <p class="font-bold text-lg text-gray-900" th:text="${song.title}">Song Title</p>
+                <p class="text-gray-700" th:text="${song.artist}">Artist</p>
+                <p class="text-gray-600" th:text="${song.album}">Album</p>
+                <img th:src="@{${song.artistImageUrl}}" alt="Artist Image" class="w-full h-32 object-cover mt-2 rounded-md">
+                <button th:onclick="|removeSubscription(${song.id})|" class="mt-2 w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600">Remove</button>
+            </div>
+        </div>
+        <div th:unless="${subscriptions != null}" class="mt-4 text-center text-gray-500">You have no subscriptions yet.</div>
+    </div>
+
+    <!-- Search for Songs -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-semibold text-gray-800">Search for Songs</h2>
+        <form th:action="@{/search}" method="get" class="mt-4 space-y-4">
+            <div class="space-y-2">
+                <label for="title" class="block text-gray-700">Song Title:</label>
+                <input type="text" id="title" name="title" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter song title">
+            </div>
+            <div class="space-y-2">
+                <label for="artist" class="block text-gray-700">Artist:</label>
+                <input type="text" id="artist" name="artist" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter artist name">
+            </div>
+            <div class="space-y-2">
+                <label for="album" class="block text-gray-700">Album:</label>
+                <input type="text" id="album" name="album" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter album name">
+            </div>
+            <div class="space-y-2">
+                <label for="year" class="block text-gray-700">Year:</label>
+                <input type="text" id="year" name="year" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter year">
+            </div>
+            <button type="submit" class="w-full py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600">Search</button>
+        </form>
+        <div th:if="${results != null}" class="mt-6 space-y-4">
+            <!-- Dynamically show search results -->
+            <div th:each="song : ${results}" class="bg-white p-4 rounded-lg shadow-lg">
+                <p class="font-bold text-lg text-gray-900" th:text="${song.title}">Song Title</p>
+                <p class="text-gray-700" th:text="${song.artist}">Artist</p>
+                <p class="text-gray-600" th:text="${song.album}">Album</p>
+                <p class="text-gray-400" th:text="${song.year}">Year</p>
+                <button th:onclick="|addSubscription(${song.id})|" class="mt-2 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600">Subscribe</button>
+            </div>
+        </div>
+        <div th:unless="${results != null}" class="mt-4 text-center text-gray-500">No results found. Try again!</div>
+    </div>
 </div>
-<div th:unless="${session.username != null}">
-    <a th:href="@{/login}" class="login-link">Go to Login</a>
-</div>
+
 </body>
 </html>
