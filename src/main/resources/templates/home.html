@@ -12,69 +12,106 @@
     <div class="text-xl font-bold">
         <span>Music App</span>
     </div>
-    <!-- User area: Show user name and logout button -->
     <div th:if="${session.username != null}" class="flex items-center space-x-4">
         <p class="text-lg">Welcome, <span th:text="${session.username}"></span>!</p>
         <a href="/logout" class="bg-red-500 text-white py-2 px-6 rounded-md hover:bg-red-600">Logout</a>
     </div>
-    <!-- Login link if not logged in -->
     <div th:unless="${session.username != null}" class="text-lg">
-        <a href="/login" class="text-white hover:text-gray-200">Go to Login</a>
+        <a href="/login" class="text-white hover:text-gray-200">Login</a>
     </div>
 </div>
 
 <div class="container mx-auto py-8 px-4">
-    <!-- Subscription area -->
-    <div class="mt-8">
-        <h2 class="text-2xl font-semibold text-gray-800">Your Subscriptions</h2>
-        <div th:if="${subscriptions != null}" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Dynamically show subscribed music -->
-            <div th:each="song : ${subscriptions}" class="bg-white p-4 rounded-lg shadow-lg">
-                <p class="font-bold text-lg text-gray-900" th:text="${song.title}">Song Title</p>
-                <p class="text-gray-700" th:text="${song.artist}">Artist</p>
-                <p class="text-gray-600" th:text="${song.album}">Album</p>
-                <img th:src="@{${song.artistImageUrl}}" alt="Artist Image" class="w-full h-32 object-cover mt-2 rounded-md">
-                <button th:onclick="|removeSubscription(${song.id})|" class="mt-2 w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600">Remove</button>
+    <!-- Subscription Area -->
+    <div class="mt-8 bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Subscriptions</h2>
+        <div th:if="${subscriptions != null and not #lists.isEmpty(subscriptions)}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div th:each="sub : ${subscriptions}" class="border rounded-lg p-4">
+                <h3 class="font-bold text-lg" th:text="${sub.title}"></h3>
+                <p class="text-gray-600" th:text="${sub.artist}"></p>
+                <p class="text-sm text-gray-500" th:text="${sub.year} + ' • ' + ${sub.album}"></p>
+                <img th:src="${sub.img_url}" alt="Album cover" class="mt-2 w-full h-32 object-cover rounded">
+                <button th:data-title="${sub.title}" class="mt-3 w-full bg-red-500 text-white py-1 rounded hover:bg-red-600" onclick="removeSubscription(this)">
+                    Remove
+                </button>
             </div>
         </div>
-        <div th:unless="${subscriptions != null}" class="mt-4 text-center text-gray-500">You have no subscriptions yet.</div>
+
+        <div th:if="${subscriptions == null or #lists.isEmpty(subscriptions)}" class="text-center py-8 text-gray-500">
+            No subscriptions yet. Search and subscribe to songs!
+        </div>
+
     </div>
 
-    <!-- Search for Songs -->
-    <div class="mt-8">
-        <h2 class="text-2xl font-semibold text-gray-800">Search for Songs</h2>
-        <form th:action="@{/search}" method="get" class="mt-4 space-y-4">
-            <div class="space-y-2">
-                <label for="title" class="block text-gray-700">Song Title:</label>
-                <input type="text" id="title" name="title" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter song title">
+    <!-- Search Area -->
+    <div class="mt-8 bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Search Songs</h2>
+        <form th:action="@{/search}" method="get" class="space-y-4" id="searchForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 mb-1">Title</label>
+                    <input type="text" name="title" class="w-full p-2 border rounded" placeholder="Song title">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-1">Artist</label>
+                    <input type="text" name="artist" class="w-full p-2 border rounded" placeholder="Artist name">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-1">Album</label>
+                    <input type="text" name="album" class="w-full p-2 border rounded" placeholder="Album name">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-1">Year</label>
+                    <input type="number" name="year" min="1900" max="2023" class="w-full p-2 border rounded" placeholder="Release year">
+                </div>
             </div>
-            <div class="space-y-2">
-                <label for="artist" class="block text-gray-700">Artist:</label>
-                <input type="text" id="artist" name="artist" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter artist name">
+            <div class="flex space-x-3">
+                <button type="submit" class="flex-1 bg-indigo-500 text-white py-2 rounded hover:bg-indigo-600">
+                    Search
+                </button>
+                <button type="reset" class="flex-1 bg-gray-300 text-gray-800 py-2 rounded hover:bg-gray-400">
+                    Clear
+                </button>
             </div>
-            <div class="space-y-2">
-                <label for="album" class="block text-gray-700">Album:</label>
-                <input type="text" id="album" name="album" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter album name">
-            </div>
-            <div class="space-y-2">
-                <label for="year" class="block text-gray-700">Year:</label>
-                <input type="text" id="year" name="year" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter year">
-            </div>
-            <button type="submit" class="w-full py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600">Search</button>
         </form>
-        <div th:if="${results != null}" class="mt-6 space-y-4">
-            <!-- Dynamically show search results -->
-            <div th:each="song : ${results}" class="bg-white p-4 rounded-lg shadow-lg">
-                <p class="font-bold text-lg text-gray-900" th:text="${song.title}">Song Title</p>
-                <p class="text-gray-700" th:text="${song.artist}">Artist</p>
-                <p class="text-gray-600" th:text="${song.album}">Album</p>
-                <p class="text-gray-400" th:text="${song.year}">Year</p>
-                <button th:onclick="|addSubscription(${song.id})|" class="mt-2 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600">Subscribe</button>
+
+        <!-- Results -->
+        <div th:if="${not #lists.isEmpty(results)}" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div th:each="song : ${results}" class="border rounded-lg p-4">
+                <h3 class="font-bold text-lg" th:text="${song.title}"></h3>
+                <p class="text-gray-600" th:text="${song.artist}"></p>
+                <p class="text-sm text-gray-500" th:text="${song.year} + ' • ' + ${song.album}"></p>
+                <img th:src="${song.img_url}" alt="Album cover" class="mt-2 w-full h-32 object-cover rounded">
+                <button th:onclick="'addSubscription(\'' + ${song.title} + '\')'"
+                        class="mt-3 w-full bg-green-500 text-white py-1 rounded hover:bg-green-600">
+                    Subscribe
+                </button>
             </div>
         </div>
-        <div th:unless="${results != null}" class="mt-4 text-center text-gray-500">No results found. Try again!</div>
+        <div th:if="${results != null and #lists.isEmpty(results)}" class="text-center py-8 text-gray-500">
+            No results found. Try different criteria.
+        </div>
     </div>
 </div>
 
+<script>
+    // Add subscription
+    async function addSubscription(title) {
+        await fetch(`/subscribe?title=${encodeURIComponent(title)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        window.location.reload();
+    }
+
+    // Remove subscription
+    async function removeSubscription(button) {
+        const title = button.getAttribute('data-title');
+        await fetch(`/unsubscribe?title=${encodeURIComponent(title)}`, {
+            method: 'DELETE'
+        });
+        window.location.reload();
+    }
+</script>
 </body>
 </html>

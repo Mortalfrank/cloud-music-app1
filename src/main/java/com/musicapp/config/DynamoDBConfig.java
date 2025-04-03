@@ -5,6 +5,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,12 @@ public class DynamoDBConfig {
     @Value("${aws.secretKey}")
     private String awsSecretKey;
 
+    // 新增这个Bean来满足MusicService的需求
+    @Bean
+    public DynamoDB dynamoDB() {
+        return new DynamoDB(amazonDynamoDB());
+    }
+
     @Bean
     public DynamoDBMapper dynamoDBMapper() {
         return new DynamoDBMapper(amazonDynamoDB());
@@ -40,9 +47,9 @@ public class DynamoDBConfig {
                         )
                 )
                 .withCredentials(
-                    new AWSStaticCredentialsProvider(
-                        new BasicAWSCredentials(awsAccessKey, awsSecretKey)
-                    )
+                        new AWSStaticCredentialsProvider(
+                                new BasicAWSCredentials(awsAccessKey, awsSecretKey)
+                        )
                 ).build();
     }
 }

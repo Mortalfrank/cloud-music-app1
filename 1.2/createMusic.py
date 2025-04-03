@@ -1,18 +1,29 @@
 import boto3
-region_name = "us-east-1"
-dynamoDB = boto3.client("dynamodb", region_name=region_name)
+from botocore.exceptions import ClientError
+
+# Set up the DynamoDB client for local testing
+dynamoDB = boto3.client('dynamodb',
+                        region_name='us-east-1',
+                        endpoint_url='http://localhost:8001')  # Local DynamoDB endpoint
+
+dynamoDB_resource = boto3.resource('dynamodb',
+                                   region_name='us-east-1',
+                                   endpoint_url='http://localhost:8001')
+
 table_name = "music"
 
-#delete if exists
+# Delete the table if it exists
 try:
     dynamoDB.delete_table(TableName=table_name)
     print(f"Deleting table {table_name}... Please wait.")
     waiter = dynamoDB.get_waiter('table_not_exists')
     waiter.wait(TableName=table_name)
     print("Table deleted successfully.")
-except dynamoDB.exceptions.ResourceNotFoundException:
-    print("Table does not exist. Creating a new one.")
-
+except ClientError as e:
+    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+        print("Table does not exist. Creating a new one.")
+    else:
+        print(f"Error deleting table: {e}")
 
 # Create the table
 try:
@@ -24,7 +35,7 @@ try:
         ],
         AttributeDefinitions=[
             {"AttributeName": "title", "AttributeType": "S"},
-            {"AttributeName": "artist", "AttributeType": "S"},  
+            {"AttributeName": "artist", "AttributeType": "S"},
             {"AttributeName": "year", "AttributeType": "N"},
             {"AttributeName": "album", "AttributeType": "S"},
         ],
@@ -55,9 +66,5 @@ try:
     waiter.wait(TableName=table_name)
     print(f"Table status: {response['TableDescription']['TableStatus']}")
 
-except dynamoDB.exceptions.ResourceInUseException:
-    print(f"Table '{table_name}' already exists.")
-
-
-#TODO
-#add one value to table with all required fields (including image url)
+except ClientError as e:
+    print(f"Error creating table: {e}")
