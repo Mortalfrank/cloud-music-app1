@@ -33,8 +33,9 @@ public class HomeController {
             @RequestParam(required = false) String album,
             Model model) {
 
-        // Search logic remains unchanged
-        return "home";
+        List<Music> results = searchMusic(title, artist, year, album); // Perform search with the given params
+        model.addAttribute("results", results);  // Add search results to the model
+        return "home";  // Return the view with search results
     }
 
     // Method to fetch subscription data
@@ -70,4 +71,59 @@ public class HomeController {
 
         return subscriptions;
     }
+
+    // Method to fetch search query results
+    private List<Music> searchMusic(String title, String artist, Integer year, String album) {
+        List<Music> musicList = new ArrayList<>();
+
+        // Create a DynamoDB client
+        DynamoDB dynamoDB = new DynamoDB(dynamoClient);
+        Table table = dynamoDB.getTable("music");  // Assuming your DynamoDB table name is "music"
+
+        // Start building a ScanSpec with filters
+        ScanSpecBuilder scanSpecBuilder = new ScanSpecBuilder();
+
+        // Add filters dynamically based on parameters
+        if (title != null && !title.isEmpty()) {
+            scanSpecBuilder.withFilterExpression("title = :title")
+                    .withValueMap(new ValueMap().withString(":title", title));
+        }
+        if (artist != null && !artist.isEmpty()) {
+            scanSpecBuilder.withFilterExpression("artist = :artist")
+                    .withValueMap(new ValueMap().withString(":artist", artist));
+        }
+        if (year != null) {
+            scanSpecBuilder.withFilterExpression("year = :year")
+                    .withValueMap(new ValueMap().withNumber(":year", year));
+        }
+        if (album != null && !album.isEmpty()) {
+            scanSpecBuilder.withFilterExpression("album = :album")
+                    .withValueMap(new ValueMap().withString(":album", album));
+        }
+
+        // Create a ScanSpec with the dynamic filters
+        ScanSpec scanSpec = scanSpecBuilder.build();
+
+        try {
+            // Execute scan with dynamic filters
+            Iterable<Item> items = table.scan(scanSpec);
+
+            // Process DynamoDB data mapping and populate Music objects
+            for (Item item : items) {
+                Music music = new Music();
+                music.setTitle(item.getString("title"));
+                music.setArtist(item.getString("artist"));
+                music.setYear(item.getInt("year"));
+                music.setAlbum(item.getString("album"));
+                music.setImg_url(item.getString("img_url"));
+
+                musicList.add(music);  // Add to the list
+            }
+        } catch (Exception e) {
+            e.printStackTrace();  // Exception handling
+        }
+
+        return musicList;
+    }
+
 }
