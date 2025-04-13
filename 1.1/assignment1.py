@@ -1,8 +1,7 @@
 import boto3
 region_name = "us-east-1"
 dynamoDB = boto3.client('dynamodb', 
-                       region_name='us-east-1',
-                       endpoint_url='http://localhost:8001') 
+                       region_name='us-east-1') 
 table_name = "login"
 
 try:

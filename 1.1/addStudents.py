@@ -1,8 +1,6 @@
 import boto3
 
-dynamoDB = boto3.resource('dynamodb',
-                       region_name='us-east-1',
-                       endpoint_url='http://localhost:8001') 
+dynamoDB = boto3.resource('dynamodb') 
 
 table = dynamoDB.Table('login')
 passw = '0123456789'

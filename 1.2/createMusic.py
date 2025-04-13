@@ -3,12 +3,10 @@ from botocore.exceptions import ClientError
 
 # Set up the DynamoDB client for local testing
 dynamoDB = boto3.client('dynamodb',
-                        region_name='us-east-1',
-                        endpoint_url='http://localhost:8001')  # Local DynamoDB endpoint
+                        region_name='us-east-1')  # Local DynamoDB endpoint
 
 dynamoDB_resource = boto3.resource('dynamodb',
-                                   region_name='us-east-1',
-                                   endpoint_url='http://localhost:8001')
+                                   region_name='us-east-1')
 
 table_name = "music"
 
