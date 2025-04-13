@@ -34,13 +34,12 @@ public class HomeController {
 
         DynamoDB dynamoDB = new DynamoDB(dynamoClient);
         try {
-            // 2. 打印subscriptions表查询条件
             Table subscriptionsTable = dynamoDB.getTable("subscriptions");
             QuerySpec querySpec = new QuerySpec()
                     .withKeyConditionExpression("user_id = :userId")
                     .withValueMap(new ValueMap().withString(":userId", userEmail));
 
-            System.out.println("[DEBUG] 查询subscriptions表条件: " + querySpec.getKeyConditionExpression());
+            System.out.println("[DEBUG] Query conditions for the subscriptions table : " + querySpec.getKeyConditionExpression());
 
             int subscriptionCount = 0;
             Set<String> subscribedTitles = new HashSet<>();

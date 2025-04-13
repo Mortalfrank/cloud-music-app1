@@ -3,13 +3,13 @@ package com.musicapp.model;
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import lombok.Data;
 
-@Data
 @DynamoDBTable(tableName = "music")
+@Data
 public class Music {
     @DynamoDBHashKey
     private String title;
 
-    @DynamoDBAttribute
+    @DynamoDBRangeKey
     private String artist;
 
     @DynamoDBAttribute
@@ -21,3 +21,4 @@ public class Music {
     @DynamoDBAttribute
     private String img_url;
 }
+
