@@ -29,13 +29,19 @@ public class HomeController {
             Model model,
             HttpSession session) {
 
+        // Gets the current user subscription
         String currentUserEmail = getCurrentUserEmail(session);
         List<Music> subscriptions = fetchSubscriptions(currentUserEmail);
         model.addAttribute("subscriptions", subscriptions);
 
-        if (title != null || artist != null || album != null || year != null) {
+        // Check if at least one search field is not empty
+        boolean hasSearchCriteria = title != null || artist != null || album != null || year != null;
+
+        if (hasSearchCriteria) {
             List<Music> results = searchSongs(title, year, artist, album);
             model.addAttribute("results", results);
+        } else {
+            model.addAttribute("results", null);
         }
 
         return "home";
@@ -50,37 +56,43 @@ public class HomeController {
         ValueMap valueMap = new ValueMap();
         Map<String, String> nameMap = new HashMap<>();
 
-        nameMap.put("#yearAttr", "year");
+        // Dynamically construct query conditions
+        List<String> conditions = new ArrayList<>();
 
         if (title != null && !title.isEmpty()) {
-            filterExpr.append("contains(title, :title)");
+            conditions.add("contains(title, :title)");
             valueMap.withString(":title", title);
         }
         if (artist != null && !artist.isEmpty()) {
-            if (filterExpr.length() > 0) filterExpr.append(" and ");
-            filterExpr.append("contains(artist, :artist)");
+            conditions.add("contains(artist, :artist)");
             valueMap.withString(":artist", artist);
         }
         if (album != null && !album.isEmpty()) {
-            if (filterExpr.length() > 0) filterExpr.append(" and ");
-            filterExpr.append("contains(album, :album)");
+            conditions.add("contains(album, :album)");
             valueMap.withString(":album", album);
         }
         if (year != null) {
-            if (filterExpr.length() > 0) filterExpr.append(" and ");
-            filterExpr.append("#yearAttr = :year");
+            nameMap.put("#yearAttr", "year");
+            conditions.add("#yearAttr = :year");
             valueMap.withInt(":year", year);
         }
 
-        if (filterExpr.length() == 0) {
+        // If there are no search criteria, an empty list is returned
+        if (conditions.isEmpty()) {
             return Collections.emptyList();
         }
 
+        // Connect all conditions using AND
+        filterExpr.append(String.join(" and ", conditions));
+
         scanSpec
                 .withFilterExpression(filterExpr.toString())
-                .withValueMap(valueMap)
-                .withNameMap(nameMap);
+                .withValueMap(valueMap);
+        if (year != null) {
+            scanSpec.withNameMap(nameMap);
+        }
 
+        // execution query
         List<Music> results = new ArrayList<>();
         try {
             ItemCollection<ScanOutcome> items = musicTable.scan(scanSpec);
