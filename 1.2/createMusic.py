@@ -1,16 +1,26 @@
 import boto3
 from botocore.exceptions import ClientError
 
-# Set up the DynamoDB client for local testing
-dynamoDB = boto3.client('dynamodb',
-                        region_name='us-east-1')  # Local DynamoDB endpoint
 
-dynamoDB_resource = boto3.resource('dynamodb',
-                                   region_name='us-east-1')
+dynamoDB = boto3.client(
+    'dynamodb',
+    region_name='us-east-1',
+    endpoint_url='http://localhost:8000',
+    aws_access_key_id='fake',
+    aws_secret_access_key='fake'
+)
+
+dynamoDB_resource = boto3.resource(
+    'dynamodb',
+    region_name='us-east-1',
+    endpoint_url='http://localhost:8000',
+    aws_access_key_id='fake',
+    aws_secret_access_key='fake'
+)
 
 table_name = "music"
 
-# Delete the table if it exists
+
 try:
     dynamoDB.delete_table(TableName=table_name)
     print(f"Deleting table {table_name}... Please wait.")
@@ -23,7 +33,7 @@ except ClientError as e:
     else:
         print(f"Error deleting table: {e}")
 
-# Create the table
+
 try:
     response = dynamoDB.create_table(
         TableName=table_name,
@@ -45,8 +55,8 @@ try:
             {
                 "IndexName": "YearAlbumIndex",
                 "KeySchema": [
-                    {"AttributeName": "year", "KeyType": "HASH"},  # Partition key for GSI
-                    {"AttributeName": "album", "KeyType": "RANGE"},  # Sort key for GSI
+                    {"AttributeName": "year", "KeyType": "HASH"},
+                    {"AttributeName": "album", "KeyType": "RANGE"},
                 ],
                 "Projection": {
                     "ProjectionType": "ALL"

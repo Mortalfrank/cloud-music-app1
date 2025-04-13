@@ -1,27 +1,32 @@
 import json
 import boto3
+from botocore.exceptions import ClientError
 
-region_name = "us-east-1"
-dynamoDB = boto3.resource("dynamodb", region_name=region_name)
+
+dynamoDB = boto3.resource(
+    'dynamodb',
+    region_name='us-east-1',
+    endpoint_url='http://localhost:8000',
+    aws_access_key_id='fake',
+    aws_secret_access_key='fake'
+)
 
 table = dynamoDB.Table("music")
 
-# Open and read the JSON file
-with open("2025a1.json") as data:
-    jsonobj = json.load(data)
+
+try:
+    with open("2025a1.json") as data:
+        jsonobj = json.load(data)
+except FileNotFoundError:
+    print("Error: File '2025a1.json' not found.")
+    exit(1)
 
 songs = jsonobj.get("songs", [])
 
-# Iterate through each song and insert it into the DynamoDB table
 for song in songs:
-    year = int(song["year"])  # Ensure year is int
-
-    # print(f"title: {song['title']}")
-    # print(f"artist: {song['artist']}")
-    # print(f"year: {year}")
-    # print(f"album: {song['album']}")
-    # print(f"img_url: {song['img_url']}")
     try:
+
+        year = int(song["year"])
         table.put_item(
             Item={
                 'title': song["title"],
@@ -31,6 +36,8 @@ for song in songs:
                 'img_url': song["img_url"]
             }
         )
-        print(f"Inserted {song['title']} by {song['artist']} into the table.")
+        print(f"Inserted: {song['title']} by {song['artist']}")
+    except ClientError as e:
+        print(f"AWS Error inserting {song['title']}: {e}")
     except Exception as e:
-        print(f"Error inserting item: {e}")
+        print(f"General Error inserting {song['title']}: {e}")
