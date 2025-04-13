@@ -40,21 +40,21 @@ public class AuthController {
             Item user = loginTable.getItem("email", email);
             if (user != null && user.getString("password").equals(password)) {
                 session.setAttribute("userEmail", email);
+                session.setAttribute("username", user.getString("user_name"));
                 session.setAttribute("loggedIn", true);
-                System.out.println("[DEBUG] login successfully, session: userEmail=" + email);
+                System.out.println("[DEBUG] Login successful. Session: " + session.getId());
                 return "redirect:/";
             }
         } catch (Exception e) {
+            System.err.println("[ERROR] Login failed for email: " + email);
             e.printStackTrace();
         }
-        System.out.println("[ERROR] login failure，email=" + email);
         return "redirect:/login?error";
     }
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
-        // Clear the user information in the session.
-        session.removeAttribute("username");
-        return "redirect:/";
+        session.invalidate();
+        return "redirect:/"; // Redirect to the home page
     }
 }
