@@ -2,32 +2,103 @@ package com.musicapp.controller;
 
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.musicapp.model.Music;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Table;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import java.util.*;
-import com.amazonaws.services.dynamodbv2.document.spec.BatchGetItemSpec;
+import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.HttpSession;
+import java.util.*;
 
 @Controller
 public class HomeController {
+
     @Autowired
     private AmazonDynamoDB dynamoClient;
 
     @GetMapping("/")
-    public String home(Model model, HttpSession session) {
+    public String home(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) String artist,
+            @RequestParam(required = false) String album,
+            Model model,
+            HttpSession session) {
+
         String currentUserEmail = getCurrentUserEmail(session);
         List<Music> subscriptions = fetchSubscriptions(currentUserEmail);
         model.addAttribute("subscriptions", subscriptions);
+
+        if (title != null || artist != null || album != null || year != null) {
+            List<Music> results = searchSongs(title, year, artist, album);
+            model.addAttribute("results", results);
+        }
+
         return "home";
     }
 
+    private List<Music> searchSongs(String title, Integer year, String artist, String album) {
+        DynamoDB dynamoDB = new DynamoDB(dynamoClient);
+        Table musicTable = dynamoDB.getTable("music");
+
+        ScanSpec scanSpec = new ScanSpec();
+        StringBuilder filterExpr = new StringBuilder();
+        ValueMap valueMap = new ValueMap();
+        Map<String, String> nameMap = new HashMap<>();
+
+        nameMap.put("#yearAttr", "year");
+
+        if (title != null && !title.isEmpty()) {
+            filterExpr.append("contains(title, :title)");
+            valueMap.withString(":title", title);
+        }
+        if (artist != null && !artist.isEmpty()) {
+            if (filterExpr.length() > 0) filterExpr.append(" and ");
+            filterExpr.append("contains(artist, :artist)");
+            valueMap.withString(":artist", artist);
+        }
+        if (album != null && !album.isEmpty()) {
+            if (filterExpr.length() > 0) filterExpr.append(" and ");
+            filterExpr.append("contains(album, :album)");
+            valueMap.withString(":album", album);
+        }
+        if (year != null) {
+            if (filterExpr.length() > 0) filterExpr.append(" and ");
+            filterExpr.append("#yearAttr = :year");
+            valueMap.withInt(":year", year);
+        }
+
+        if (filterExpr.length() == 0) {
+            return Collections.emptyList();
+        }
+
+        scanSpec
+                .withFilterExpression(filterExpr.toString())
+                .withValueMap(valueMap)
+                .withNameMap(nameMap);
+
+        List<Music> results = new ArrayList<>();
+        try {
+            ItemCollection<ScanOutcome> items = musicTable.scan(scanSpec);
+            for (Item item : items) {
+                Music music = new Music();
+                music.setTitle(item.getString("title"));
+                music.setArtist(item.getString("artist"));
+                music.setYear(item.getInt("year"));
+                music.setAlbum(item.getString("album"));
+                music.setImg_url(item.getString("img_url"));
+                results.add(music);
+            }
+        } catch (Exception e) {
+            System.err.println("Error searching songs: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return results;
+    }
 
     private List<Music> fetchSubscriptions(String userEmail) {
         System.out.println("[DEBUG] Start querying user subscriptions，email: " + userEmail);
