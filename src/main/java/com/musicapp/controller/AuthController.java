@@ -31,8 +31,8 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
-                        HttpSession session) {
-
+                        HttpSession session,
+                        Model model) {
         DynamoDB dynamoDB = new DynamoDB(dynamoClient);
         Table loginTable = dynamoDB.getTable("login");
 
@@ -49,8 +49,12 @@ public class AuthController {
             System.err.println("[ERROR] Login failed for email: " + email);
             e.printStackTrace();
         }
-        return "redirect:/login?error";
+
+
+        model.addAttribute("error", "Invalid email or password.");
+        return "login";
     }
+
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
