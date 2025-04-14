@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.musicapp.model.Music;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpSession;
 import java.util.*;
 
@@ -31,6 +35,7 @@ public class HomeController {
 
         // Gets the current user subscription
         String currentUserEmail = getCurrentUserEmail(session);
+        model.addAttribute("userEmail", currentUserEmail);
         List<Music> subscriptions = fetchSubscriptions(currentUserEmail);
         model.addAttribute("subscriptions", subscriptions);
 
@@ -170,5 +175,60 @@ public class HomeController {
         System.out.println("[DEBUG] session email attribute: " + emailObj);
         return emailObj != null ? emailObj.toString() : null;
     }
+
+    @PostMapping("/subscribe")
+    @ResponseBody
+    public String subscribeToSong(
+            @RequestParam String title,
+            @RequestParam String artist,
+            HttpSession session) {
+
+        String userEmail = getCurrentUserEmail(session);
+        if (userEmail == null) return "Not logged in";
+
+        try {
+            DynamoDB dynamoDB = new DynamoDB(dynamoClient);
+            Table table = dynamoDB.getTable("subscriptions");
+
+            Item item = new Item()
+                    .withPrimaryKey("user_id", userEmail, "title", title)
+                    .withString("artist", artist);
+
+            table.putItem(item);
+            System.out.println("[INFO] Subscribed: " + title + " by " + artist + " for " + userEmail);
+
+            return "Subscribed";
+        } catch (Exception e) {
+            System.err.println("[ERROR] Failed to subscribe: " + e.getMessage());
+            return "Error";
+        }
+    }
+
+    @DeleteMapping("/unsubscribe")
+    @ResponseBody
+    public String unsubscribeFromSong(
+            @RequestParam String title,
+            @RequestParam String artist,
+            HttpSession session) {
+
+        String userEmail = getCurrentUserEmail(session);
+        if (userEmail == null) return "Not logged in";
+
+        try {
+            DynamoDB dynamoDB = new DynamoDB(dynamoClient);
+            Table table = dynamoDB.getTable("subscriptions");
+
+            DeleteItemSpec deleteSpec = new DeleteItemSpec()
+                    .withPrimaryKey("user_id", userEmail, "title", title);
+
+            table.deleteItem(deleteSpec);
+            System.out.println("[INFO] Unsubscribed: " + title + " by " + artist + " for " + userEmail);
+            return "Unsubscribed";
+        } catch (Exception e) {
+            System.err.println("[ERROR] Failed to unsubscribe: " + e.getMessage());
+            return "Error";
+        }
+    }
+
 
 }

@@ -42,9 +42,11 @@ public class DynamoDBInitializer implements CommandLineRunner {
 
         deleteTableIfExists("music");
         createMusicTable();
+        waitForTableToBecomeActive("music");
 
         deleteTableIfExists("login");
         createLoginTable();
+        waitForTableToBecomeActive("login");
     }
 
     private void deleteTableIfExists(String tableName) {
@@ -122,6 +124,22 @@ public class DynamoDBInitializer implements CommandLineRunner {
         System.out.println("Imported " + songs.size() + " songs");
     }
 
+    private void waitForTableToBecomeActive(String tableName) {
+        System.out.println("Waiting for " + tableName + " to become ACTIVE...");
+        boolean isActive = false;
+        while (!isActive) {
+            try {
+                Thread.sleep(2000); // Check every 2 seconds
+                String status = amazonDynamoDB.describeTable(tableName).getTable().getTableStatus();
+                if ("ACTIVE".equals(status)) {
+                    isActive = true;
+                    System.out.println("Table " + tableName + " is ACTIVE.");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     private void addTestUsers() {
         String passw = "0123456789";
@@ -161,6 +179,7 @@ public class DynamoDBInitializer implements CommandLineRunner {
 
             amazonDynamoDB.createTable(request);
             System.out.println("Created table: " + tableName);
+            waitForTableToBecomeActive(tableName);
         }
     }
 

@@ -1,7 +1,5 @@
 package com.musicapp.config;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -20,13 +18,7 @@ public class DynamoDBConfig {
     @Value("${aws.region}")
     private String awsRegion;
 
-    @Value("${aws.accessKeyId}")
-    private String awsAccessKey;
-
-    @Value("${aws.secretKey}")
-    private String awsSecretKey;
-
-    // 新增这个Bean来满足MusicService的需求
+    // Add this Bean to meet the requirements of MusicService.
     @Bean
     public DynamoDB dynamoDB() {
         return new DynamoDB(amazonDynamoDB());
@@ -46,10 +38,7 @@ public class DynamoDBConfig {
                                 awsRegion
                         )
                 )
-                .withCredentials(
-                        new AWSStaticCredentialsProvider(
-                                new BasicAWSCredentials(awsAccessKey, awsSecretKey)
-                        )
-                ).build();
+                // Remove the explicit certificate provider and let the AWS SDK use the default certificate chain
+                .build();
     }
 }
