@@ -6,7 +6,6 @@ import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.musicapp.model.Music;
 import com.musicapp.model.MusicWrapper;
@@ -16,10 +15,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.util.List;
 
-@Profile("init-db") // Activated by -Dspring-boot.run.profiles=init-db
+@Profile("init-db") // This class only runs when the profile 'init-db' is enabled
 @Component
 public class DynamoDBInitializer implements CommandLineRunner {
 
@@ -29,17 +29,23 @@ public class DynamoDBInitializer implements CommandLineRunner {
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
 
+    /**
+     * Main runner method that executes on application startup (if profile matches).
+     * Responsible for resetting tables, loading music data, adding users, and setting up test data.
+     */
     @Override
     public void run(String... args) throws Exception {
-        recreateTables();
-        importMusicData();
-        addTestUsers();
-        createSubscriptionsTable();
-        insertSubscriptionTestData();
+        recreateTables();               // Recreate 'music' and 'login' tables
+        importMusicData();             // Load music data from 2025a1.json
+        addTestUsers();                // Populate login table with 10 test users
+        createSubscriptionsTable();   // Create subscriptions table if it doesn't exist
+        insertSubscriptionTestData(); // Insert test subscription data
     }
 
+    /**
+     * Deletes and recreates required tables: music and login.
+     */
     private void recreateTables() {
-
         deleteTableIfExists("music");
         createMusicTable();
         waitForTableToBecomeActive("music");
@@ -49,6 +55,9 @@ public class DynamoDBInitializer implements CommandLineRunner {
         waitForTableToBecomeActive("login");
     }
 
+    /**
+     * Deletes a table if it exists, and waits for full deletion before proceeding.
+     */
     private void deleteTableIfExists(String tableName) {
         try {
             amazonDynamoDB.deleteTable(tableName);
@@ -72,6 +81,10 @@ public class DynamoDBInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Creates the 'music' table with title and artist as keys,
+     * and adds a global secondary index for year and album.
+     */
     private void createMusicTable() {
         CreateTableRequest request = new CreateTableRequest()
                 .withTableName("music")
@@ -101,6 +114,9 @@ public class DynamoDBInitializer implements CommandLineRunner {
         System.out.println("Created table: music");
     }
 
+    /**
+     * Creates the 'login' table with email as the primary key.
+     */
     private void createLoginTable() {
         CreateTableRequest request = new CreateTableRequest()
                 .withTableName("login")
@@ -112,6 +128,9 @@ public class DynamoDBInitializer implements CommandLineRunner {
         System.out.println("Created table: login");
     }
 
+    /**
+     * Imports music data from 2025a1.json (inside resources) into the 'music' table.
+     */
     private void importMusicData() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         MusicWrapper wrapper = mapper.readValue(
@@ -124,12 +143,15 @@ public class DynamoDBInitializer implements CommandLineRunner {
         System.out.println("Imported " + songs.size() + " songs");
     }
 
+    /**
+     * Waits until a given table is in ACTIVE state before proceeding.
+     */
     private void waitForTableToBecomeActive(String tableName) {
         System.out.println("Waiting for " + tableName + " to become ACTIVE...");
         boolean isActive = false;
         while (!isActive) {
             try {
-                Thread.sleep(2000); // Check every 2 seconds
+                Thread.sleep(2000); // Poll every 2 seconds
                 String status = amazonDynamoDB.describeTable(tableName).getTable().getTableStatus();
                 if ("ACTIVE".equals(status)) {
                     isActive = true;
@@ -141,6 +163,9 @@ public class DynamoDBInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Adds 10 test users to the 'login' table with unique emails and usernames.
+     */
     private void addTestUsers() {
         String passw = "0123456789";
         for (int i = 0; i < 10; i++) {
@@ -148,6 +173,7 @@ public class DynamoDBInitializer implements CommandLineRunner {
             user.setEmail("s3945643" + i + "@student.rmit.edu.au");
             user.setUserName("ChristopherLamb" + i);
 
+            // Generate a simple 6-digit password
             StringBuilder password = new StringBuilder();
             for (int j = 0; j < 6; j++) {
                 password.append(passw.charAt((i + j) % passw.length()));
@@ -159,6 +185,9 @@ public class DynamoDBInitializer implements CommandLineRunner {
         System.out.println("Added 10 test users");
     }
 
+    /**
+     * Creates the 'subscriptions' table with user_id and title as keys if it does not already exist.
+     */
     private void createSubscriptionsTable() {
         String tableName = "subscriptions";
         try {
@@ -183,6 +212,9 @@ public class DynamoDBInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Inserts two sample subscription records into the 'subscriptions' table.
+     */
     private void insertSubscriptionTestData() {
         DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
 

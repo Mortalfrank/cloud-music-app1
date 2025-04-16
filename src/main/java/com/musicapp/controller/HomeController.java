@@ -33,6 +33,7 @@ public class HomeController {
             Model model,
             HttpSession session) {
 
+
         // Gets the current user subscription
         String currentUserEmail = getCurrentUserEmail(session);
         model.addAttribute("userEmail", currentUserEmail);
